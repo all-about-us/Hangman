@@ -100,7 +100,7 @@
 		$("#guesses-left").text(`Имате ${remainingGuesses} опита.`);
 		$("#message-area").text(message);
 		if (pastGuesses.length != 0) {$("#feedback-area").text(`Вече опитахте с ${pastGuesses.join(", ")}`);}
-		else {$("#feedback-area").text("Все още нямате въведени букви.");}
+		else {$("#feedback-area").text("");}
 		if (remainingGuesses <= 0 || remainingLetters <= 0) {
             $("#guess-input, #submit-guess").prop('disabled', true);}}
     
@@ -180,4 +180,5 @@
     
 	
     </script>
+
 	</body>
