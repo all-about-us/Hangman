@@ -101,7 +101,7 @@
 		$("#message-area").text(message);
 		if (pastGuesses.length != 0) {$("#feedback-area").text(`Вече опитахте с ${pastGuesses.join(", ")}`);}
 		else {$("#feedback-area").text("");}
-		if (remainingGuesses <= 0 || remainingLetters <= 0) {
+		if (remainingGuesses <= 0 || remainingLetters <= 0) {$("#guesses-left").text(``);
             $("#guess-input, #submit-guess").prop('disabled', true);}}
     
 	function endGame() {
@@ -182,3 +182,4 @@
     </script>
 
 	</body>
+
