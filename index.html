@@ -45,16 +45,19 @@
     
     
     // -----------------------------------------------------------------------
-    // 1. АСИНХРОННА ФУНКЦИЯ: Зарежда думите от файла
+    // 1. АСИНХРОННА ФУНКЦИЯ: Зарежда думите от файла, ако масивът е празен
     // -----------------------------------------------------------------------
-    async function loadWordsFormFile() {
+    async function fetchWordList() {
+        // Ако масивът вече има думи (напр. след първото зареждане), пропускаме fetch.
+        if (filteredWords.length > 0) {
+            return; 
+        }
+
         try {
-            // ⭐ fetch е АСИНХРОННА операция - трябва да я await-нем
             const response = await fetch(WORD_LIST_FILE);
             if (!response.ok) {
                 throw new Error(`HTTP грешка: ${response.status} при зареждане на ${WORD_LIST_FILE}`);
             }
-            // ⭐ response.text() е АСИНХРОННА операция - трябва да я await-нем
             const text = await response.text();
             
             filteredWords = text.split('\n')
@@ -63,7 +66,7 @@
             
             console.log(`Word list loaded successfully. Total words: ${filteredWords.length}`);
         } catch (error) {
-            console.error("Грешка при зареждане на списъка с думи. Използване на резервен списък:", error);
+            console.error("Грешка при зареждане. Използване на резервен списък:", error);
             filteredWords = ["computer", "script", "coding", "async", "promise"];
         }
     }
@@ -73,7 +76,7 @@
     // 2. СИНХРОННА ФУНКЦИЯ: Избира дума от масива
     // -----------------------------------------------------------------------
     function pickWord() {
-        // ⭐ filteredWords вече е попълнен благодарение на 'await' в document.ready
+        // Тази функция работи с вече попълнен масив
         if (filteredWords.length === 0) {
             console.error("No words loaded. Returning fallback 'error'.");
             return "error"; 
@@ -83,7 +86,7 @@
 
     
     // -----------------------------------------------------------------------
-    // 3. ФУНКЦИИ ЗА ЛОГИКАТА НА ИГРАТА
+    // 3. ФУНКЦИИ ЗА ЛОГИКАТА НА ИГРАТА (остават същите)
     // -----------------------------------------------------------------------
 	function setupWordsArray(word){
 		var answerArray=[];
@@ -165,15 +168,21 @@
     
     
     // -----------------------------------------------------------------------
-    // 4. ГЛАВНА ФУНКЦИЯ: startNewGame() (СИНХРОННА)
+    // 4. ГЛАВНА ФУНКЦИЯ: startNewGame() (АСИНХРОННА)
     // -----------------------------------------------------------------------
-    function startNewGame() {
+    async function startNewGame() {
+        // UI: Деактивираме контролите, за да покажем, че се зарежда
         $("#new-word-button").prop('disabled', true).text('Зареждане...');
         $("#guess-input, #submit-guess").prop('disabled', true);
         $("#word-definition").text('... Извличане на дума...');
 
+        // ⭐ ИЗЧАКВАНЕ: Цялата игра спира ТУК, докато не се зареди списъкът с думи.
+        await fetchWordList(); 
+        
+        // 2. Избираме дума (СИНХРОННО)
         const newWord = pickWord(); 
 
+        // 3. Инициализираме играта
         if (newWord === "error") {
             $("#word-mask").text("ГРЕШКА");
             $("#message-area").text("Списъкът с думи е празен.");
@@ -182,25 +191,25 @@
             $("#word-definition").text(`Дума от ${newWord.length} букви.`);
         }
 
+        // 4. UI: Активираме контролите
         $("#new-word-button").prop('disabled', false).text('Избери друга дума');
+        $("#guess-input, #submit-guess").prop('disabled', false); // Активираме инпута след зареждане
     }
     
 	
 	// -----------------------------------------------------------------------
-    // 5. ИНИЦИАЛИЗАЦИЯ (document.ready) (АСИНХРОННА)
+    // 5. ИНИЦИАЛИЗАЦИЯ (document.ready) (СИНХРОННА)
     // -----------------------------------------------------------------------
-	$(document).ready(async function() {
-        // ⭐ ИЗЧАКВАНЕ: Цялата игра спира тук, докато файлът не се зареди.
-        await loadWordsFormFile(); 
-        
-        // ⭐ СТАРТИРАНЕ: След зареждането, играта стартира нормално.
+	$(document).ready(function() {
+        // ⭐ startNewGame() се извиква веднага. Тъй като е async, тя стартира асинхронно.
 		startNewGame(); 
 		
+        // Прикачваме събития
 		$("#submit-guess").click(handleGuess);
 		$("#guess-input").on('keypress', function(e) {
 			if (e.which === 13) { handleGuess();}
 		});
-        $("#new-word-button").click(startNewGame);
+        $("#new-word-button").click(startNewGame); // Бутонът отново извиква startNewGame
 	});
     
 	
